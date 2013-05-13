@@ -58,6 +58,13 @@ int start()
 	_basketRSI = GetBasketRSI(0);
 	_basketProfit = GetBasketProfit();
 	
+	GlobalVariableSet("vGrafBalance", AccountBalance());
+	GlobalVariableSet("vGrafEquity", AccountEquity());
+
+	GlobalVariableSet("AudBasket_RSI0", _basketRSI);
+	GlobalVariableSet("AudBasket_RSI1", _prevBasketRSI);
+
+	DoTrailing();
 	CalculateOrdersLots();
 	CloseOrders();
 	OpenNextStep();
@@ -148,6 +155,8 @@ void OpenNextStepBySymbol(string symbol)
 
 void OpenOrder(string symbol, double volume)
 {
+	if (symbol != Symbol()) return;
+	
 	double bid = MarketInfo(symbol, MODE_BID);
 	double ask = MarketInfo(symbol, MODE_ASK);
 	
@@ -188,6 +197,13 @@ void CloseOrders()
 				OrderClose(OrderTicket(), OrderLots(), closePrice, SlipPage);
 			}
 		}
+	}
+}
+
+void DoTrailing()
+{
+	if (TrailingStop > 0)
+	{
 	}
 }
 

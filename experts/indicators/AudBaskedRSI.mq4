@@ -37,14 +37,14 @@ int start()
 	
 	for (int i = unCountedBars - 1; i >= 0; i--)
 	{
-		double rsiAUDUSD = iRSI("AUDUSD", RsiTimeFrame, RsiPeriod, PRICE_CLOSE, i);
-		double rsiAUDNZD = iRSI("AUDNZD", RsiTimeFrame, RsiPeriod, PRICE_CLOSE, i);
-		double rsiAUDCAD = iRSI("AUDCAD", RsiTimeFrame, RsiPeriod, PRICE_CLOSE, i);
-		double rsiAUDJPY = iRSI("AUDJPY", RsiTimeFrame, RsiPeriod, PRICE_CLOSE, i);
-		double rsiAUDCHF = iRSI("AUDCHF", RsiTimeFrame, RsiPeriod, PRICE_CLOSE, i);
-		double rsiEURAUD = iRSI("EURAUD", RsiTimeFrame, RsiPeriod, PRICE_CLOSE, i);
-		double rsiGBPAUD = iRSI("GBPAUD", RsiTimeFrame, RsiPeriod, PRICE_CLOSE, i);
-		RsiBasket[i] = rsiAUDUSD + rsiAUDNZD + rsiAUDCAD + rsiAUDJPY + rsiAUDCHF + (100 - rsiEURAUD) + (100 - rsiGBPAUD);
+		if (i == 0)
+		{
+			RsiBasket[i] = GlobalVariableGet("AudBasket_RSI0");
+		}
+		else if (i == 1)
+		{
+			RsiBasket[i] = GlobalVariableGet("AudBasket_RSI1");
+		}
 	}
 	return(0);
 }
