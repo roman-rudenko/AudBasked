@@ -5,6 +5,7 @@
 //+------------------------------------------------------------------+
 #property copyright "Copyright © 2013, Roman Rudenko"
 
+#include <SmartDev.MultiCurrencyTester.Connect.mqh>
 extern double	Lot				= 0.01;
 extern int		TakeProfit		= 0;
 extern int		StopLoss		= 0;
@@ -38,12 +39,25 @@ datetime _lastBar				= 0;
 
 int init()
 {
+	if (IsTesting())
+	{
+		InitializeTestAPI(0, 7, 300, "");
+		DeclareVariable("TotalProfitVariableName", VariableOperation_Sum);
+		DeclareVariable("vGrafBalance", VariableOperation_Sum);
+		DeclareVariable("vGrafEquity", VariableOperation_Sum);
+	}
+
 	_basketRSI = GetBasketRSI(0);
 	return(0);
 }
 
 int deinit()
 {
+	if (IsTesting())
+	{
+		DeinitializeTestAPI();
+	}
+
 	return(0);
 }
 
@@ -58,8 +72,14 @@ int start()
 	_basketRSI = GetBasketRSI(0);
 	_basketProfit = GetBasketProfit();
 	
-	GlobalVariableSet("vGrafBalance", AccountBalance());
-	GlobalVariableSet("vGrafEquity", AccountEquity());
+	if (IsTesting())
+	{
+		NextTick(TimeCurrent(), AccountBalance(), AccountEquity());
+		SetVariable("vGrafBalance", AccountBalance());
+		SetVariable("vGrafEquity", AccountEquity());
+		GlobalVariableSet("vGrafBalance", GetVariable("vGrafBalance"));
+		GlobalVariableSet("vGrafEquity", GetVariable("vGrafEquity"));
+	}
 
 	GlobalVariableSet("AudBasket_RSI0", _basketRSI);
 	GlobalVariableSet("AudBasket_RSI1", _prevBasketRSI);
@@ -86,6 +106,13 @@ double GetBasketProfit()
 			result += OrderProfit() + OrderSwap() + OrderCommission();
 		}
 	}
+
+	if (IsTesting())
+	{
+		SetVariable("TotalProfitVariableName", result);
+		return (GetVariable("TotalProfitVariableName"));
+	}
+
 	return (result);
 }
 
@@ -107,12 +134,19 @@ double GetOrdersVolume(string symbol)
 
 void CalculateOrdersLots()
 {
+	if (Symbol() != "AUDUSD")
+	{
+		_currentOrdersVolume = GlobalVariableGetExt("AudBasket_CurrentOrdersVolume");
+		return;
+	}
+	
 	if (_basketProfit > 0)
 	{
 		if (RsiCloseLevel > 0 && _prevBasketRSI > RsiCloseLevel && _basketRSI <= RsiCloseLevel)
 		{
 			_currentOrdersVolume = 0;
 			_nextOrdersVolume = 0;
+			GlobalVariableSetExt("AudBasket_CurrentOrdersVolume", _currentOrdersVolume);
 		}
 	}
 	else
@@ -125,6 +159,7 @@ void CalculateOrdersLots()
 			&& _basketRSI >= RsiOpenLevel)
 		{
 			_currentOrdersVolume = _nextOrdersVolume;
+			GlobalVariableSetExt("AudBasket_CurrentOrdersVolume", _currentOrdersVolume);
 		}
 	}
 }
